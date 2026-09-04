@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang='ru'>
+<head>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+  <title>С днём рождения</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --green: #173d32;
+      --green-soft: #789879;
+      --pistachio: #dce8c5;
+      --pink: #eaa5ad;
+      --pink-light: #f9dfe0;
+      --cream: #fff9f0;
+      --shadow: 0 20px 60px rgba(23, 61, 50, .18);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--green);
+      background: var(--cream);
+      font-family: Helvetica, Arial, sans-serif;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, p { margin: 0; }
+
+    h1, h2 {
+      font-family: 'Great Vibes', cursive;
+      font-weight: 400;
+      letter-spacing: .02em;
+    }
+
+    /* ---- Прелоадер ---- */
+    .preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: var(--green);
+      transition: opacity .8s ease, visibility .8s ease;
+    }
+    .preloader.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .loader-content {
+      position: relative;
+      z-index: 2;
+      width: min(420px, 78vw);
+      text-align: center;
+    }
+    .loader-title {
+      margin-bottom: 26px;
+      color: var(--pistachio);
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(2.4rem, 8vw, 5rem);
+      font-weight: 400;
+    }
+    .loader-line {
+      height: 2px;
+      overflow: hidden;
+      background: rgba(220, 232, 197, .24);
+    }
+    .loader-progress {
+      width: 0%;
+      height: 100%;
+      background: var(--pink);
+      transition: width .2s ease;
+    }
+    .loader-percent {
+      display: block;
+      margin-top: 12px;
+      color: var(--pink-light);
+      font-size: .75rem;
+      letter-spacing: .15em;
+    }
+
+    /* ---- Сердечки ---- */
+    .heart {
+      position: absolute;
+      bottom: -50px;
+      width: 22px;
+      height: 22px;
+      background: var(--pink);
+      transform: rotate(45deg);
+      opacity: .8;
+      animation: float-heart linear infinite;
+    }
+    .heart::before, .heart::after {
+      content: '';
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: inherit;
+    }
+    .heart::before { left: -11px; }
+    .heart::after { top: -11px; }
+    .heart:nth-child(1) { left: 8%; animation-duration: 7s; animation-delay: -.8s; }
+    .heart:nth-child(2) { left: 20%; width: 15px; height: 15px; animation-duration: 9s; animation-delay: -4s; background: var(--pistachio); }
+    .heart:nth-child(3) { left: 34%; animation-duration: 8s; animation-delay: -2s; }
+    .heart:nth-child(4) { left: 51%; width: 13px; height: 13px; animation-duration: 6.5s; animation-delay: -3.2s; background: var(--pink-light); }
+    .heart:nth-child(5) { left: 68%; animation-duration: 10s; animation-delay: -6s; }
+    .heart:nth-child(6) { left: 84%; width: 17px; height: 17px; animation-duration: 8.5s; animation-delay: -1.5s; background: var(--pistachio); }
+
+    @keyframes float-heart {
+      0% { transform: translateY(0) rotate(45deg) scale(.7); opacity: 0; }
+      15% { opacity: .85; }
+      100% { transform: translateY(-115vh) rotate(405deg) scale(1.1); opacity: 0; }
+    }
+
+    /* ---- Общие стили экранов ---- */
+    .screen {
+      position: relative;
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      padding: 80px 7vw;
+      overflow: hidden;
+      isolation: isolate;
+    }
+    .screen::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -2;
+      background: radial-gradient(circle at 20% 20%, rgba(234, 165, 173, .42), transparent 28%), radial-gradient(circle at 85% 65%, rgba(120, 152, 121, .25), transparent 32%), var(--cream);
+    }
+    .screen::after {
+      content: '✦';
+      position: absolute;
+      z-index: -1;
+      top: 10%;
+      right: 8%;
+      color: rgba(23, 61, 50, .15);
+      font-size: 8rem;
+      transform: rotate(18deg);
+    }
+    .screen-inner {
+      width: min(1100px, 100%);
+      text-align: center;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+    .screen.is-visible .screen-inner {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ---- Подзаголовки (eyebrow) и подсказки (hint) с уменьшенным межбуквенным интервалом ---- */
+    .eyebrow {
+      margin-bottom: 18px;
+      color: var(--green-soft);
+      font-size: .7rem;
+      letter-spacing: .12em;      /* было .28em — уменьшили */
+      text-transform: uppercase;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    .screen-title {
+      max-width: 800px;
+      margin: 0 auto 36px;
+      font-size: clamp(3.2rem, 8vw, 7.2rem);
+      line-height: .88;
+    }
+
+    .screen-text {
+      max-width: 480px;
+      margin: 0 auto;
+      font-size: 1rem;
+      line-height: 1.5;           /* было 1.7 — уменьшили */
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    /* ---- Подсказка "нажми на конверт" ---- */
+    .hint {
+      margin-top: 24px;
+      color: var(--green-soft);
+      font-size: .7rem;
+      letter-spacing: .08em;      /* было .18em — уменьшили */
+      text-transform: uppercase;
+      font-family: Helvetica, Arial, sans-serif;
+    }
+
+    /* ---- Декоративные элементы (CSS-фигуры) ---- */
+    .decor {
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .72;
+      filter: saturate(.85);
+    }
+    .peony {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #fff1e5 0 8%, transparent 9%), repeating-radial-gradient(circle at 50% 50%, #e69aa7 0 9px, #f5c0c5 10px 18px, #d98191 19px 25px);
+      box-shadow: inset 0 0 25px rgba(140, 65, 75, .2), 0 20px 35px rgba(90, 54, 50, .12);
+    }
+    .peony::after {
+      content: '';
+      position: absolute;
+      width: 100px;
+      height: 150px;
+      left: 55px;
+      top: 90px;
+      border-left: 4px solid var(--green-soft);
+      border-radius: 50%;
+      transform: rotate(-27deg);
+    }
+    .ribbon {
+      width: 250px;
+      height: 70px;
+      border-bottom: 14px solid var(--pink);
+      border-radius: 50%;
+      transform: rotate(-15deg);
+    }
+    .decor-one { left: -35px; top: 13%; transform: rotate(-20deg) scale(.9); }
+    .decor-two { right: -55px; bottom: 8%; transform: rotate(20deg) scale(1.2); }
+    .decor-three { left: 5%; bottom: 5%; transform: rotate(16deg); }
+    .decor-four { right: 4%; top: 10%; transform: rotate(-28deg) scale(.65); }
+
+    /* ---- Конверт (исправлен) ---- */
+    .envelope-wrap {
+      position: relative;
+      width: min(390px, 80vw);
+      margin: 35px auto 0;
+      cursor: pointer;
+      perspective: 800px;
+    }
+    .envelope-wrap.shaking { animation: shake 0.16s ease-in-out infinite alternate; }
+    @keyframes shake {
+      from { transform: rotate(-2deg); }
+      to { transform: rotate(2deg); }
+    }
+    .envelope {
+      position: relative;
+      aspect-ratio: 1.45 / 1;
+      border-radius: 5px;
+      background: #f4d6c8;
+      box-shadow: var(--shadow);
+      overflow: visible;
+    }
+    .envelope::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      clip-path: polygon(0 0, 50% 54%, 100% 0, 100% 100%, 0 100%);
+      background: linear-gradient(135deg, #f8e4d7, #e8b9b1);
+    }
+    .envelope::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      clip-path: polygon(0 0, 50% 51%, 100% 0, 50% 70%);
+      background: #f9e8dc;
+      transform-origin: top;
+      transition: transform .7s ease, opacity .7s ease;
+    }
+    .envelope-wrap.open .envelope::after {
+      opacity: 0;
+      transform: rotateX(0);
+    }
+
+    .seal {
+      position: absolute;
+      z-index: 5;
+      left: 50%;
+      top: 50%;
+      display: grid;
+      width: 56px;
+      height: 56px;
+      place-items: center;
+      border-radius: 50%;
+      color: white;
+      background: var(--pink);
+      font-size: 1.4rem;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 8px 18px rgba(120, 60, 70, .2);
+      transition: opacity .3s ease;
+    }
+    .envelope-wrap.open .seal { opacity: 0; }
+
+    .message-card {
+      position: absolute;
+      z-index: 6;
+      inset: 13% 8%;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: var(--green);
+      background: white;
+      box-shadow: 0 10px 35px rgba(23, 61, 50, .18);
+      font-family: 'Great Vibes', cursive;
+      font-size: clamp(1.2rem, 3vw, 2rem);
+      line-height: .95;
+      opacity: 0;
+      transform: translateY(24px) scale(.92);
+      transition: opacity .7s ease .3s, transform .7s ease .3s;
+    }
+    .envelope-wrap.open .message-card {
+      opacity: 1;
+      transform: translateY(-45%) scale(1);
+    }
+
+    /* ---- Блок пожеланий ---- */
+    .wish-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      gap: clamp(30px, 7vw, 100px);
+      text-align: left;
+    }
+    .wish-copy .screen-title { margin: 0 0 22px; }
+    .portrait {
+      position: relative;
+      width: min(390px, 75vw);
+      aspect-ratio: 4 / 5;
+      margin: auto;
+      padding: 15px;
+      background: var(--pistachio);
+      box-shadow: var(--shadow);
+      transform: rotate(3deg);
+    }
+    .portrait::before,
+    .portrait::after {
+      content: '';
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: repeating-radial-gradient(circle, #efaab3 0 7px, #d77e91 8px 13px, #f8d0d0 14px 19px);
+    }
+    .portrait::before { top: -35px; left: -35px; }
+    .portrait::after { right: -30px; bottom: -25px; }
+    .portrait-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      background: linear-gradient(145deg, #eaa5ad, #789879);
+    }
+
+    /* ---- Галерея (слайдер) ---- */
+    .gallery-title { margin-bottom: 38px; }
+    .slider {
+      position: relative;
+      width: min(760px, 100%);
+      margin: auto;
+      overflow: hidden;
+      border: 12px solid white;
+      box-shadow: var(--shadow);
+      min-height: 300px;
+      background: #f5f0ea;
+    }
+    .slides {
+      display: flex;
+      transition: transform .7s cubic-bezier(.2, .8, .2, 1);
+      height: 100%;
+    }
+    .slide {
+      flex: 0 0 100%;
+      aspect-ratio: 16 / 10;
+      object-fit: cover;
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+    .slider-button {
+      position: absolute;
+      top: 50%;
+      z-index: 2;
+      display: grid;
+      width: 44px;
+      height: 44px;
+      place-items: center;
+      border: 0;
+      border-radius: 50%;
+      color: var(--green);
+      background: white;
+      font-size: 1.4rem;
+      cursor: pointer;
+      transform: translateY(-50%);
+      box-shadow: 0 5px 15px rgba(23, 61, 50, .15);
+    }
+    .slider-button.prev { left: 12px; }
+    .slider-button.next { right: 12px; }
+    .dots { display: flex; justify-content: center; gap: 8px; margin-top: 22px; }
+    .dot {
+      width: 7px;
+      height: 7px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: var(--pink);
+      opacity: .35;
+      cursor: pointer;
+    }
+    .dot.active { opacity: 1; transform: scale(1.45); }
+
+    /* ---- Финальный блок ---- */
+    .final-image {
+      width: min(470px, 82vw);
+      aspect-ratio: 1 / 1.08;
+      margin: 0 auto 38px;
+      object-fit: cover;
+      display: block;
+      border-radius: 48% 48% 8px 8px;
+      border: 14px solid white;
+      box-shadow: var(--shadow);
+      transform: rotate(-3deg);
+    }
+    .final-title { margin-bottom: 0; }
+
+    /* ---- Мобильная версия ---- */
+    @media (max-width: 700px) {
+      .screen {
+        padding: 40px 20px;
+        min-height: 90svh;
+      }
+      .wish-card {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 20px;
+      }
+      .wish-copy .screen-title {
+        margin-right: auto;
+        margin-left: auto;
+        margin-bottom: 16px;
+      }
+      .decor-one { left: -80px; }
+      .decor-two { right: -100px; }
+      .screen::after { font-size: 5rem; }
+      .slider { min-height: 200px; }
+      .gallery-title { margin-bottom: 24px; }
+      .dots { margin-top: 14px; }
+      .final-image { margin-bottom: 24px; }
+      .screen-title { margin-bottom: 24px; }
+      .envelope-wrap { margin-top: 20px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class='preloader' id='preloader'>
+    <div class='heart'></div><div class='heart'></div><div class='heart'></div>
+    <div class='heart'></div><div class='heart'></div><div class='heart'></div>
+    <div class='loader-content'>
+      <div class='loader-title'>С любовью</div>
+      <div class='loader-line'><div class='loader-progress' id='loaderProgress'></div></div>
+      <span class='loader-percent' id='loaderPercent'>0%</span>
+    </div>
+  </div>
+
+  <main>
+    <section class='screen hero' id='hero'>
+      <div class='decor peony decor-one'></div>
+      <div class='decor ribbon decor-two'></div>
+      <div class='screen-inner'>
+        <div class='eyebrow'>для особенного человека</div>
+        <h1 class='screen-title'>С днём рождения</h1>
+        <div class='envelope-wrap shaking' id='envelope' role='button' tabindex='0' aria-label='Открыть поздравление'>
+          <div class='envelope'>
+            <div class='message-card'>С днём рождения<br>🥳</div>
+            <div class='seal'>♥</div>
+          </div>
+        </div>
+        <div class='hint'>нажми на конверт</div>
+      </div>
+    </section>
+
+    <section class='screen' id='gallery-screen'>
+      <div class='decor peony decor-one'></div>
+      <div class='decor ribbon decor-two'></div>
+      <div class='screen-inner'>
+        <div class='eyebrow'>моменты, которые хочется помнить</div>
+        <h2 class='screen-title gallery-title'>Особенные моменты</h2>
+        <div class='slider' id='slider'>
+          <div class='slides' id='slides'></div>
+          <button class='slider-button prev' id='prev' aria-label='Предыдущее фото'>‹</button>
+          <button class='slider-button next' id='next' aria-label='Следующее фото'>›</button>
+        </div>
+        <div class='dots' id='dots'></div>
+      </div>
+    </section>
+
+    <section class='screen'>
+      <div class='decor peony decor-three'></div>
+      <div class='decor ribbon decor-four'></div>
+      <div class='screen-inner wish-card'>
+        <div class='wish-copy'>
+          <div class='eyebrow'></div>
+          <h2 class='screen-title'>Желаю тебе</h2>
+          <p class='screen-text'>Пусть впереди будет много светлых событий, искренних улыбок и людей, рядом с которыми легко быть собой.</p>
+        </div>
+        <div class='portrait'>
+          <img class='portrait-image' src='https://images.unsplash.com/photo-1526047932273-341f2a7631f9?w=700&q=85' alt='Розовые цветы'>
+        </div>
+      </div>
+    </section>
+
+    <section class='screen'>
+      <div class='decor peony decor-three'></div>
+      <div class='decor ribbon decor-four'></div>
+      <div class='screen-inner'>
+        <img class='final-image' src='img/final.png' alt='Нежные розовые пионы'>
+        <h2 class='screen-title final-title'>Будь счастлива!</h2>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      const galleryImages = [
+        'img/frame 4.png',
+        'img/Frame 5.png',
+        'img/Frame 6.png',
+        'img/Frame 9.png',
+        'img/Frame 10.png',
+        'img/Frame 11.png',
+        'img/Frame 22.png',
+        'img/Frame 8.png',
+        'img/Frame 13.png',
+        'img/Frame 14.png',
+        'img/Frame 15.png',
+        'img/Frame 16.png',
+        'img/Frame 17.png',
+        'img/Frame 18.png',
+        'img/Frame 19.png',
+        'img/Frame 20.png',
+        'img/Frame 21.png',
+
+      ];
+
+      // Прелоадер
+      const preloader = document.getElementById('preloader');
+      const hero = document.getElementById('hero');
+      const progress = document.getElementById('loaderProgress');
+      const percent = document.getElementById('loaderPercent');
+
+      const portraitSrc = document.querySelector('.portrait-image')?.src;
+      const finalSrc = document.querySelector('.final-image')?.src;
+      const allImages = [...galleryImages];
+      if (portraitSrc) allImages.push(portraitSrc);
+      if (finalSrc) allImages.push(finalSrc);
+
+      let loaded = 0;
+      const total = allImages.length;
+      let loaderFinished = false;
+
+      function updateLoader() {
+        loaded++;
+        const value = Math.min(100, Math.round((loaded / total) * 100));
+        if (progress) progress.style.width = value + '%';
+        if (percent) percent.textContent = value + '%';
+        if (loaded >= total && !loaderFinished) {
+          loaderFinished = true;
+          setTimeout(() => {
+            if (preloader) preloader.classList.add('is-hidden');
+            if (hero) hero.classList.add('is-visible');
+          }, 1500);
+        }
+      }
+
+      allImages.forEach(src => {
+        const img = new Image();
+        img.onload = updateLoader;
+        img.onerror = updateLoader;
+        img.src = src;
+      });
+
+      setTimeout(() => {
+        if (preloader && !preloader.classList.contains('is-hidden')) {
+          preloader.classList.add('is-hidden');
+          if (hero) hero.classList.add('is-visible');
+        }
+      }, 6000);
+
+      // Конверт
+      const envelope = document.getElementById('envelope');
+      if (envelope) {
+        envelope.addEventListener('click', () => {
+          envelope.classList.remove('shaking');
+          envelope.classList.toggle('open');
+        });
+        envelope.addEventListener('keydown', event => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            envelope.click();
+          }
+        });
+      }
+
+      // Слайдер
+      const slidesContainer = document.getElementById('slides');
+      const dotsContainer = document.getElementById('dots');
+      const prevBtn = document.getElementById('prev');
+      const nextBtn = document.getElementById('next');
+
+      if (!slidesContainer || !dotsContainer || !prevBtn || !nextBtn) {
+        console.error('Ошибка: не найдены элементы слайдера!');
+        return;
+      }
+
+      let currentSlide = 0;
+      galleryImages.forEach((src, index) => {
+        const slide = document.createElement('img');
+        slide.className = 'slide';
+        slide.src = src;
+        slide.alt = 'Памятный момент ' + (index + 1);
+        slidesContainer.appendChild(slide);
+
+        const dot = document.createElement('button');
+        dot.className = 'dot' + (index === 0 ? ' active' : '');
+        dot.setAttribute('aria-label', 'Открыть слайд ' + (index + 1));
+        dot.addEventListener('click', () => goToSlide(index));
+        dotsContainer.appendChild(dot);
+      });
+
+      function goToSlide(index) {
+        currentSlide = (index + galleryImages.length) % galleryImages.length;
+        slidesContainer.style.transform = 'translateX(-' + currentSlide * 100 + '%)';
+        document.querySelectorAll('.dot').forEach((dot, dotIndex) => {
+          dot.classList.toggle('active', dotIndex === currentSlide);
+        });
+      }
+
+      prevBtn.addEventListener('click', () => goToSlide(currentSlide - 1));
+      nextBtn.addEventListener('click', () => goToSlide(currentSlide + 1));
+
+      let touchStartX = 0;
+      const sliderElement = document.getElementById('slider');
+      if (sliderElement) {
+        sliderElement.addEventListener('touchstart', event => {
+          touchStartX = event.touches[0].clientX;
+        }, { passive: true });
+        sliderElement.addEventListener('touchend', event => {
+          const touchEndX = event.changedTouches[0].clientX;
+          if (touchStartX - touchEndX > 45) goToSlide(currentSlide + 1);
+          if (touchEndX - touchStartX > 45) goToSlide(currentSlide - 1);
+        }, { passive: true });
+      }
+
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) entry.target.classList.add('is-visible');
+        });
+      }, { threshold: 0.2 });
+      document.querySelectorAll('.screen').forEach(screen => observer.observe(screen));
+
+    })();
+  </script>
+</body>
+</html>
